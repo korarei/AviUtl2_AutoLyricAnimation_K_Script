@@ -1,0 +1,48 @@
+name: releaser
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  releaser:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+    - name: Chekout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Create zip file
+      run: |
+        cp *.md script
+        cp LICENSE script
+        zip -r -q -@ AutoLyricAnimation_K_${{ github.ref_name }}.zip ./script
+
+    - name: Create release note
+      run: |
+        count=0
+        IFS=$'\n'
+        while read line; do
+          if [ ${count} = 0 ] && [[ ${line} =~ "Change Log" ]]; then
+            count=1
+          elif [ ${count} = 1 ] && [[ ${line} =~ "*v" ]]; then
+            count=2
+          elif [ ${count} = 2 ] && [[ ${line} =~ "*v" ]]; then
+            break
+          elif [ ${count} = 2 ]; then
+            echo ${line} >> ReleaseNote.txt
+          fi
+        done < README.md
+
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: AutoLyricAnimation_K_${{ github.ref_name }}
+        files: '*.zip'
+        body_path: ReleaseNote.txt

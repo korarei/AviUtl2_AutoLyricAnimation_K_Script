@@ -1,0 +1,158 @@
+--infomation:AutoLyricAnimation_K.anm2 v1.0.0
+--label:Transition
+
+--track0:Ref Motion,0,1,0,0.001
+--track1:Max Dist,0,2000,500,0.001
+--track2:Spread,0,100,50,1
+--track3:Speed,0,100,4,0.001
+--track@_1:Interval,0,100,8,1
+--check@_2:Move X,1
+--check@_3:Move Y,1
+--check@_4:Omni Dirs,1
+--check@_5:Inv Dirs,0
+--select@_6:Type,In=0,Out=1,In/Out=2
+--track@_7:Entry Scale,0,800,200
+--check@_8:Entry Rand Flip,0
+--track@_9:Exit Scale,0,800,200
+--check@_10:Exit Rand Flip,0
+--track@_11:Seed,-500,500,-1,1
+
+local max_distance = obj.track1
+local spread_amt = obj.track2
+local speed = obj.track3
+local interval = _1 _1 = nil
+local can_move_x = _2 == 1 _2 = nil
+local can_move_y = _3 == 1 _3 = nil
+local is_omni_dirs = _4 == 1 _4 = nil
+local is_inv = _5 == 1 _5 = nil
+local anm_type = _6 _6 = nil
+local entry_scale = _7 / 100.0 _7 = nil
+local use_entry_rand_flip = _8 == 1 _8 = nil
+local exit_scale = _9 / 100.0 _9 = nil
+local use_exit_rand_flip = _10 == 1 _10 = nil
+local seed = _11 _11 = nil
+
+local prog_delta = 100.0
+local rand_cnt = 0
+
+local function is_zero(val)
+    local epsilon = 1e-4
+    return math.abs(val) < epsilon
+end
+
+local function clamp(val, min, max)
+    return math.max(min, math.min(max, val))
+end
+
+local function rand(st, ed)
+    local r = obj.rand(st, ed, seed, obj.index + rand_cnt * obj.num)
+    rand_cnt = rand_cnt + 1
+    return r
+end
+
+local function get_motion(track_type, ratio, is_inv_motion)
+    local st = obj.getvalue(track_type, 0.0)
+    local ed = obj.getvalue(track_type, 0.0, -1)
+    local scale = ed - st
+
+    if is_zero(scale) then
+        return obj.time / obj.totaltime
+    end
+
+    local val
+    if (not is_inv_motion) then
+        val = obj.getvalue(track_type, obj.totaltime * ratio) - st
+    else
+        val = ed - obj.getvalue(track_type, obj.totaltime * (1-ratio))
+    end
+
+    return val / scale
+end
+
+local function calc_prog()
+    return speed * obj.frame - obj.index * interval
+end
+
+local function calc_delta(motion)
+    return motion * max_distance * rand(0, spread_amt) / 100.0
+end
+
+local function in_animation()
+    local prog = calc_prog()
+
+    if (prog < 0) then
+        obj.alpha = 1e-4
+    elseif (prog < speed) then
+        obj.zoom = math.max(obj.zoom * entry_scale, 1e-4)
+
+        if use_entry_rand_flip then
+            local is_flip = rand(0, 1) == 0
+            if is_flip then
+                obj.effect("反転", "左右反転", 1)
+            end
+        end
+    end
+
+    prog = clamp(prog, 0.0, prog_delta) / prog_delta
+
+    local motion = 1 - get_motion(0, prog, false)
+    return calc_delta(motion)
+end
+
+local function out_animation(is_inv_motion)
+    local anm_len = prog_delta + interval * (obj.num - 1)
+    local st = speed * obj.totalframe - anm_len - 1
+    local prog = calc_prog() - st
+
+    if (prog > prog_delta) then
+        obj.alpha = 1e-4
+    elseif (prog > prog_delta - speed) then
+        obj.zoom = math.max(obj.zoom * exit_scale, 1e-4)
+
+        if use_exit_rand_flip then
+            local is_flip = rand(0, 1) == 0
+            if is_flip then
+                obj.effect("反転", "左右反転", 1)
+            end
+        end
+    end
+
+    prog = clamp(prog, 0.0, prog_delta) / prog_delta
+
+    local motion = get_motion(0, prog, is_inv_motion)
+    return calc_delta(motion)
+end
+
+local delta = 0.0
+if (anm_type == 0) then
+    delta = in_animation()
+elseif (anm_type == 1) then
+    delta = out_animation()
+elseif (anm_type == 2) then
+    delta = in_animation()
+    delta = delta + out_animation(true)
+end
+
+if (is_omni_dirs) then
+    local is_inv_dir = rand(0, 1) == 0
+    if is_inv_dir then
+        delta = -delta
+    end
+end
+
+if (is_inv) then
+    delta = -delta
+end
+
+if can_move_x and can_move_y then
+    local is_x = rand(0, 1) == 0
+    if is_x then
+        obj.ox = obj.ox + delta
+    else
+        obj.oy = obj.oy + delta
+    end
+elseif can_move_x then
+    obj.ox = obj.ox + delta
+elseif can_move_y then
+    obj.oy = obj.oy + delta
+end
