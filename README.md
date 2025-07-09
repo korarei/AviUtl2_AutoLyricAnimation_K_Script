@@ -1,0 +1,2 @@
+# AviUtl2_AutoLyricAnimation_K_Script
+AviUtl2でリリックモーションを行うためのスクリプト
