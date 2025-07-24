@@ -108,5 +108,8 @@ LICENSEファイルに記載．
 
 
 ## Change Log
+- **v1.0.1**
+  - Spreadパラメータ0のとき移動しない問題の修正．
+
 - **v1.0.0**
   - release

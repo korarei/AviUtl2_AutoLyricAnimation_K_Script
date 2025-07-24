@@ -26,9 +26,9 @@ local can_move_y = _3 == 1 _3 = nil
 local is_omni_dirs = _4 == 1 _4 = nil
 local is_inv = _5 == 1 _5 = nil
 local anm_type = _6 _6 = nil
-local entry_scale = _7 / 100.0 _7 = nil
+local entry_scale = _7 * 0.01 _7 = nil
 local use_entry_rand_flip = _8 == 1 _8 = nil
-local exit_scale = _9 / 100.0 _9 = nil
+local exit_scale = _9 * 0.01 _9 = nil
 local use_exit_rand_flip = _10 == 1 _10 = nil
 local seed = _11 _11 = nil
 
@@ -74,7 +74,7 @@ local function calc_prog()
 end
 
 local function calc_delta(motion)
-    return motion * max_distance * rand(0, spread_amt) / 100.0
+    return motion * max_distance * rand(100 - spread_amt, 100) / 100.0
 end
 
 local function in_animation()
