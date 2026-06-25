@@ -9,6 +9,8 @@ AviUtl2でリリックモーションを行うためのスクリプト
 
 [ダウンロードはこちらから．](https://github.com/korarei/AviUtl2_AutoLyricAnimation_K_Script/releases)
 
+後継ツール [FlowType_K](https://github.com/korarei/AviUtl2_FlowType_K_Script) をご利用ください．
+
 ## 動作確認
 
 - [AviUtl ExEdit2 beta1](https://spring-fragrance.mints.ne.jp/aviutl/)
